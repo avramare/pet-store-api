@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-
+const petfinder = require('../services/petfinder');
 
 /**
  * @swagger
@@ -8,93 +8,116 @@ const router = express.Router();
  *   schemas:
  *     Pet:
  *       type: object
- *       required:
- *         - name
- *         - species
  *       properties:
  *         id:
  *           type: integer
- *           description: Auto-generated ID
+ *           description: Pet ID
  *         name:
  *           type: string
  *           description: Pet name
- *         species:
+ *         type:
  *           type: string
- *           description: Pet species
+ *           description: Animal type
+ *         breeds:
+ *           type: object
+ *           properties:
+ *             primary:
+ *               type: string
+ *             secondary:
+ *               type: string
+ *             mixed:
+ *               type: boolean
  *         age:
- *           type: integer
- *           description: Pet age
+ *           type: string
+ *         gender:
+ *           type: string
+ *         size:
+ *           type: string
+ *         status:
+ *           type: string
  */
 
 /**
  * @swagger
  * /api/pets:
  *   get:
- *     summary: Returns all pets
+ *     summary: Returns pets from Petfinder
  *     tags: [Pets]
+ *     parameters:
+ *       - in: query
+ *         name: type
+ *         schema:
+ *           type: string
+ *         description: Animal type (e.g., dog, cat)
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *         description: Page number
  *     responses:
  *       200:
  *         description: List of pets
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Pet'
  */
-router.get('/pets', (req, res) => {
-    res.json([]);
-});
-
-/**
- * @swagger
- * /api/pets:
- *   post:
- *     summary: Create a new pet
- *     tags: [Pets]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/Pet'
- *     responses:
- *       201:
- *         description: Pet created successfully
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Pet'
- */
-router.post('/pets', (req, res) => {
-    res.status(201).json(req.body);
+router.get('/pets', async (req, res) => {
+    try {
+        const params = {
+            type: req.query.type,
+            page: req.query.page || 1,
+            limit: 20
+        };
+        const pets = await petfinder.getPets(params);
+        res.json(pets);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
 });
 
 /**
  * @swagger
  * /api/pets/{id}:
  *   get:
- *     summary: Get a pet by id
+ *     summary: Get a pet by ID from Petfinder
  *     tags: [Pets]
  *     parameters:
  *       - in: path
  *         name: id
+ *         required: true
  *         schema:
  *           type: integer
- *         required: true
- *         description: Pet id
  *     responses:
  *       200:
  *         description: Pet details
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Pet'
- *       404:
- *         description: Pet not found
  */
-router.get('/pets/:id', (req, res) => {
-    res.json({});
+router.get('/pets/:id', async (req, res) => {
+    try {
+        const pet = await petfinder.getPetById(req.params.id);
+        res.json(pet);
+    } catch (error) {
+        if (error.response?.status === 404) {
+            res.status(404).json({ message: 'Pet not found' });
+        } else {
+            res.status(500).json({ message: error.message });
+        }
+    }
+});
+
+/**
+ * @swagger
+ * /api/types:
+ *   get:
+ *     summary: Get all animal types from Petfinder
+ *     tags: [Pets]
+ *     responses:
+ *       200:
+ *         description: List of animal types
+ */
+router.get('/types', async (req, res) => {
+    try {
+        const types = await petfinder.getTypes();
+        res.json(types);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
 });
 
 module.exports = router;

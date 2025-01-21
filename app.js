@@ -1,9 +1,14 @@
 const express = require('express');
 const swaggerJsdoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
+const cors = require('cors');
 const petRoutes = require('./routes/pets');
 
 const app = express();
+app.use(express.json());
+
+//CORS
+app.use(cors());
 app.use(express.json());
 
 const swaggerOptions = {

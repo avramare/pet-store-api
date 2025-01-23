@@ -36,6 +36,5 @@ app.use('/api', petRoutes);
 
 const PORT = 3000;
 app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-    console.log(`Swagger docs available at http://localhost:${PORT}/api-docs`);
+    console.log(`Swagger Pet Store API available at http://localhost:${PORT}/api-docs`);
 });
